@@ -2,12 +2,18 @@
 extern crate askama;
 #[macro_use]
 extern crate error_chain;
+// TODO: move this into a standalone crate. We don't want to compile cargo and tempdir for no
+// reason.
+extern crate cargo;
+extern crate tempdir;
+
 
 pub mod errors {
     error_chain! {
         foreign_links {
             Io(::std::io::Error);
             Askama(::askama::Error);
+            Cargo(::cargo::CargoError);
         }
     }
 }

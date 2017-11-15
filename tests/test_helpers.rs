@@ -20,10 +20,35 @@ mod test_create_empty_crate {
 
     #[test]
     fn it_generates_a_new_bare_crate() {
-        let crate_dir = create_empty_crate();
+        let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
         let cargo_toml = read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap();
         assert!(cargo_toml.contains("name = \"cargo-gen-test\""),
                 format!("{} should contain metadata for the cargo-gen-test crate",
                         cargo_toml))
+    }
+}
+
+mod test_run_generated_tests {
+    use cargo_gen_helpers::create_file;
+    use cargo_gen_helpers::test_helpers::{create_empty_crate, run_generated_tests};
+
+    // TODO: find a way to test the failing test case.
+    // #[test]
+    // #[should_panic]
+    // fn it_panics_when_the_generated_test_fails() {
+    //     let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
+    //     create_file(crate_dir.path().join("tests/foo.rs"),
+    //                 "#[test]\nfn t() { assert!(false); }")
+    //         .unwrap();
+    //     run_generated_tests(crate_dir.path().to_path_buf()).unwrap()
+    // }
+
+    #[test]
+    fn it_runs_the_generated_tests() {
+        let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
+        create_file(crate_dir.path().join("tests/foo.rs"),
+                    "#[test]\nfn t() { assert!(true); }")
+            .unwrap();
+        run_generated_tests(crate_dir.path().to_path_buf()).unwrap()
     }
 }

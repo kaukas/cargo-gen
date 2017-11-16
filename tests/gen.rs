@@ -88,14 +88,14 @@ fn it_adds_cargo_gen_helpers_as_a_dependency() {
 #[test]
 fn it_adds_the_cargo_generator_entry_into_cargo_toml_package_metadata() {
     let tempdir = create_empty_crate("cargo-gen-test").unwrap();
-    let original_cargo_toml = read_file_to_string(tempdir.path().join("Cargo.toml")).unwrap();
-    CargoGeneratorGenerator::new(tempdir.path().to_path_buf()).gen("app", false).unwrap();
-    let new_cargo_toml = read_file_to_string(tempdir.path().join("Cargo.toml")).unwrap();
     let expected_content = "[package.metadata.cargo_generators.\"cargo_gen_test.app\"]\n\
                             single_line_description = \"An app generator.\"\n\
                             command = \"cargo_gen_test::cargo_generators::app::AppGenerator\"";
-    assert!(!original_cargo_toml.contains(expected_content),
-            format!("{} should not contain {}", new_cargo_toml, expected_content));
-    assert!(new_cargo_toml.contains(expected_content),
-            format!("{} should contain {}", new_cargo_toml, expected_content));
+    let cargo_toml = read_file_to_string(tempdir.path().join("Cargo.toml")).unwrap();
+    assert!(!cargo_toml.contains(expected_content),
+            format!("{} should not contain {}", cargo_toml, expected_content));
+    CargoGeneratorGenerator::new(tempdir.path().to_path_buf()).gen("app", false).unwrap();
+    let cargo_toml = read_file_to_string(tempdir.path().join("Cargo.toml")).unwrap();
+    assert!(cargo_toml.contains(expected_content),
+            format!("{} should contain {}", cargo_toml, expected_content));
 }

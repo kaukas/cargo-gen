@@ -2,8 +2,8 @@
 extern crate askama;
 #[macro_use]
 extern crate error_chain;
-// TODO: move this into a standalone crate. We don't want to compile cargo and tempdir for no
-// reason.
+// TODO: move this into a standalone crate. We don't want to compile cargo and tempdir when they
+// are not used.
 extern crate cargo;
 extern crate tempdir;
 

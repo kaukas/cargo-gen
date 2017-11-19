@@ -1,5 +1,8 @@
 use errors::*;
+use std::ffi::OsString;
 
 pub trait CargoGenerator {
-    fn gen(&self, short_name: &str, dry_run: bool) -> Result<()>;
+    fn gen<I, T>(&self, args: I) -> Result<()>
+        where I: IntoIterator<Item = T>,
+              T: Into<OsString> + Clone;
 }

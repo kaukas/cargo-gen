@@ -8,6 +8,7 @@ askama = "0.5"
 error-chain = "0.11"
 cargo = "0.22"
 tempdir = "0.3"
+clap = "2.27"
 
 [dev-dependencies]
 tempfile = "2.2"

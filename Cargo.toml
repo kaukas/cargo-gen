@@ -1,17 +1,11 @@
 [package]
-name = "cargo-gen-helpers"
+name = "cargo-gen"
 version = "0.0.1"
+description = "A cargo generator subcommand"
 authors = ["Linas Juškevičius <linas@prodigito.lt>"]
+license = "MIT"
 
 [dependencies]
-askama = "0.5"
-error-chain = "0.11"
-cargo = "0.22"
-tempdir = "0.3"
-clap = "2.27"
+cargo-gen-helpers = { path = "members/cargo-gen-helpers" }
 
-[dev-dependencies]
-tempfile = "2.2"
-
-[build-dependencies]
-askama = "0.5"
+[workspace]

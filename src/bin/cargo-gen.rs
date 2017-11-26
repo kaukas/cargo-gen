@@ -1,3 +1,8 @@
+extern crate cargo_gen;
+
+use cargo_gen::CLArgs;
+use std::env::args_os;
+
 fn main() {
-    println!("Hello, world!");
+    let clargs = CLArgs::parse(args_os());
 }

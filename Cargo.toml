@@ -7,5 +7,9 @@ license = "MIT"
 
 [dependencies]
 cargo-gen-helpers = { path = "members/cargo-gen-helpers" }
+clap = "2.27"
+
+[dev-dependencies]
+assert_cli = "0.5"
 
 [workspace]

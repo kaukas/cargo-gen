@@ -28,13 +28,29 @@ pub fn create_empty_crate(name: &str) -> Result<TempDir> {
     Ok(tempdir)
 }
 
+fn find_lockfile() -> Result<PathBuf> {
+    let current_path = Path::new(env!("CARGO_MANIFEST_DIR"));
+    // The "x" at the end makes the current_path a parent entry and allows us to not special case
+    // the logic in `while let` for the current_path.
+    let mut path = current_path.join("x");
+    while let Some(parent_path) = path.to_owned().parent() {
+        path = parent_path.to_path_buf();
+        let lock_path = path.join("Cargo.lock");
+        if lock_path.is_file() {
+            return Ok(lock_path);
+        }
+    }
+    bail!(format!("Could not find Cargo.lock in {} or any of its parent directories",
+                  current_path.display()))
+}
+
 pub fn run_generated_tests(path: PathBuf) -> Result<()> {
     // We want to avoid any network access and minimise dependent crate compilations. Reuse as many
-    // dependencies form the current project as possible. To achieve that we use the Cargo.lock
+    // dependencies from the current project as possible. To achieve that we use the Cargo.lock
     // from the current project. It is a hack since the lockfile does not apply but Cargo seems to
-    // be able to pick up the right pieces from it.
+    // be able to pick up the applicable pieces from it.
     create_file(path.join("Cargo.lock"),
-                &read_file_to_string(Path::new("./Cargo.lock").to_path_buf())?)?;
+                &read_file_to_string(find_lockfile()?)?)?;
 
     let config = CargoConfig::default()?;
     config.configure(0, Some(false), &None, false, false, &[])?;

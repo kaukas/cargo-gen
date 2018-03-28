@@ -7,7 +7,12 @@ use assert_cli::Assert;
 #[test]
 fn it_prints_the_help_text_when_called_without_arguments() {
     // let crate_dir = create_empty_crate("gen-test").unwrap();
-    Assert::cargo_binary("cargo-gen").fails().and().stderr().contains("--help").unwrap();
+    Assert::cargo_binary("cargo-gen")
+        .fails()
+        .and()
+        .stderr()
+        .contains("--help")
+        .unwrap();
 }
 
 #[test]
@@ -30,5 +35,15 @@ fn it_fails_when_both_list_and_subcommand_provided() {
         .and()
         .stderr()
         .contains("--help")
+        .unwrap();
+}
+
+#[test]
+#[ignore]
+fn it_returns_a_list_of_available_generators() {
+    Assert::cargo_binary("cargo-gen")
+        .with_args(&["gen", "--list"])
+        .stdout()
+        .contains("cargo-gen.generator")
         .unwrap();
 }

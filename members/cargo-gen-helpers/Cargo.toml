@@ -8,7 +8,8 @@ askama = "0.5"
 error-chain = "0.11"
 cargo = "0.22"
 tempdir = "0.3"
-clap = "2.27"
+clap = { version = "2.31", features = ["yaml"] }
+yaml-rust = "0.4"
 
 [dev-dependencies]
 tempfile = "2.2"

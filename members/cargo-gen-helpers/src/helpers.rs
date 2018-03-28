@@ -4,7 +4,8 @@ use std::io::{Read, Write};
 use std::path::Path;
 
 pub fn create_file<P>(path: P, content: &str) -> Result<()>
-    where P: AsRef<Path>
+where
+    P: AsRef<Path>,
 {
     let the_path = path.as_ref();
     if let Some(dir) = the_path.parent() {
@@ -17,8 +18,9 @@ pub fn create_file<P>(path: P, content: &str) -> Result<()>
 }
 
 pub fn modify_file<P, F>(path: P, modifier: F) -> Result<()>
-    where F: FnOnce(String) -> Result<Option<String>>,
-          P: AsRef<Path>
+where
+    F: FnOnce(String) -> Result<Option<String>>,
+    P: AsRef<Path>,
 {
     let mut content = String::new();
     File::open(&path)?.read_to_string(&mut content)?;

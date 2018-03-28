@@ -1,12 +1,14 @@
 #[macro_use]
 extern crate askama;
 #[macro_use]
+extern crate clap;
+#[macro_use]
 extern crate error_chain;
+
 // TODO: move this into a standalone crate. We don't want to compile cargo and tempdir when they
 // are not used.
 extern crate cargo;
 extern crate tempdir;
-
 
 pub mod errors {
     error_chain! {

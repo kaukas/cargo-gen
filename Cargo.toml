@@ -7,7 +7,8 @@ license = "MIT"
 
 [dependencies]
 cargo-gen-helpers = { path = "members/cargo-gen-helpers" }
-clap = "2.27"
+clap = "2.31"
+yaml-rust = "0.4"
 
 [dev-dependencies]
 assert_cli = "0.5"

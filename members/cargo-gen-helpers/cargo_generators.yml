@@ -1,0 +1,14 @@
+- name: cargo_generator.generator
+  factory: "cargo_gen_helpers::gen"
+  version: "0.1"
+  about: Generate a scaffold of an empty but functional generator
+  args:
+    - GENERATOR_NAME:
+        help: The short (unqualified) name of the generator
+        required: true
+        index: 1
+    - crate-root:
+        help: The root folder of the crate
+        long: crate-root
+        value_name: FOLDER
+        default_value: "."

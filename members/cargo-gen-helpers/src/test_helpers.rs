@@ -40,8 +40,10 @@ fn find_lockfile() -> Result<PathBuf> {
             return Ok(lock_path);
         }
     }
-    bail!(format!("Could not find Cargo.lock in {} or any of its parent directories",
-                  current_path.display()))
+    bail!(format!(
+        "Could not find Cargo.lock in {} or any of its parent directories",
+        current_path.display()
+    ))
 }
 
 pub fn run_generated_tests(path: PathBuf) -> Result<()> {
@@ -49,8 +51,10 @@ pub fn run_generated_tests(path: PathBuf) -> Result<()> {
     // dependencies from the current project as possible. To achieve that we use the Cargo.lock
     // from the current project. It is a hack since the lockfile does not apply but Cargo seems to
     // be able to pick up the applicable pieces from it.
-    create_file(path.join("Cargo.lock"),
-                &read_file_to_string(find_lockfile()?)?)?;
+    create_file(
+        path.join("Cargo.lock"),
+        &read_file_to_string(find_lockfile()?)?,
+    )?;
 
     let config = CargoConfig::default()?;
     config.configure(0, Some(false), &None, false, false, &[])?;

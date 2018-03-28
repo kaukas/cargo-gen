@@ -46,7 +46,7 @@ fn find_lockfile() -> Result<PathBuf> {
     ))
 }
 
-pub fn run_generated_tests(path: PathBuf) -> Result<()> {
+pub fn run_generated_tests(path: &PathBuf) -> Result<()> {
     // We want to avoid any network access and minimise dependent crate compilations. Reuse as many
     // dependencies from the current project as possible. To achieve that we use the Cargo.lock
     // from the current project. It is a hack since the lockfile does not apply but Cargo seems to

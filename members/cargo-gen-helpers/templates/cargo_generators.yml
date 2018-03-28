@@ -1,0 +1,11 @@
+- name: gen-test.app
+  # TODO: pick the name from the parameter
+  factory: "cargo-gen-test::cargo_generators::app"
+  version: "0.1"
+  about: An App generator
+  args:
+    - crate-root:
+        help: The root folder of the crate
+        long: crate-root
+        value_name: FOLDER
+        default_value: "."

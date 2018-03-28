@@ -14,6 +14,10 @@ struct GenFileTemplate {}
 #[template(path = "testfile.rs")]
 struct TestFileTemplate {}
 
+#[derive(Template)]
+#[template(path = "cargo_generators.yml")]
+struct ClapYamlFileTemplate {}
+
 pub struct CargoGeneratorGenerator {
     root: PathBuf,
     short_name: String,
@@ -29,20 +33,6 @@ where
         let args = App::new("")
             .subcommand(SubCommand::with_name("gen").subcommand(SubCommand::from_yaml(&yml[0])))
             .get_matches_from(clargs);
-        // let args = App::new("")
-        //     .subcommand(SubCommand::with_name("gen")
-        //         .subcommand(SubCommand::with_name("cargo_generator.generator")
-        //             .about("Generate a scaffold of an empty but functional generator")
-        //             .arg(Arg::with_name("GENERATOR_NAME")
-        //                 .help("The short (unqualified) name of the generator")
-        //                 .required(true)
-        //                 .index(1))
-        //             .arg(Arg::with_name("crate-root")
-        //                 .help("The root folder of the crate")
-        //                 .long("crate-root")
-        //                 .value_name("FOLDER")
-        //                 .default_value("."))))
-        //     .get_matches_from(clargs);
         let gen_args = args.subcommand_matches("gen")
             .expect("'gen' subcommand expected but not provided");
         let cgargs = gen_args
@@ -60,7 +50,7 @@ impl CargoGenerator for CargoGeneratorGenerator {
         // cargo generators module
         // TODO: modify existing
         create_file(
-            PathBuf::from(self.root.join("src/cargo_generators/mod.rs")),
+            self.root.join("src/cargo_generators/mod.rs"),
             "pub mod app;",
         )?;
 
@@ -71,26 +61,23 @@ impl CargoGenerator for CargoGeneratorGenerator {
         create_file(path, &gen_file_content)?;
 
         // expose cargo generators in lib.rs
-        modify_file(
-            PathBuf::from(self.root.join("src/lib.rs")),
-            |mut contents| {
-                contents.insert_str(0, "pub mod cargo_generators;\n");
-                Ok(Some(contents))
-            },
-        )?;
+        modify_file(self.root.join("src/lib.rs"), |mut contents| {
+            contents.insert_str(
+                0,
+                "#[macro_use]\nextern crate clap;\n\npub mod cargo_generators;\n",
+            );
+            Ok(Some(contents))
+        })?;
 
         // cargo generators test loader module
         create_file(
-            PathBuf::from(self.root.join("tests/cargo_gen.rs")),
+            self.root.join("tests/cargo_gen.rs"),
             "mod cargo_generators;",
         )?;
 
         // cargo gen test module
         // TODO: modify existing
-        create_file(
-            PathBuf::from(self.root.join(format!("tests/cargo_generators/mod.rs"))),
-            "mod app;",
-        )?;
+        create_file(self.root.join("tests/cargo_generators/mod.rs"), "mod app;")?;
 
         // cargo gen test
         let test_file_content = TestFileTemplate {}.render()?;
@@ -98,34 +85,32 @@ impl CargoGenerator for CargoGeneratorGenerator {
             .join(format!("tests/cargo_generators/{}.rs", self.short_name));
         create_file(path, &test_file_content)?;
 
+        // Create a clap command line specifications YAML file
+        // TODO: modify existing
+        let clap_file_content = ClapYamlFileTemplate {}.render()?;
+        let path = self.root.join("cargo_generators.yml");
+        create_file(path, &clap_file_content)?;
+
         // Cargo.toml
         // TODO: move to helper
-        modify_file(
-            PathBuf::from(self.root.join("Cargo.toml")),
-            |mut contents| {
-                // TODO: use a TOML parser that preserves order, whitespace, etc. At the moment the
-                // toml crate does not.
+        modify_file(self.root.join("Cargo.toml"), |mut contents| {
+            // TODO: use a TOML parser that preserves order, whitespace, etc. At the moment the
+            // toml crate does not.
 
-                // Add the cargo-gen-helpers dependency.
-                let deps_str = "[dependencies]\n";
-                let crate_version = env!("CARGO_PKG_VERSION");
-                // FIXME: pick clap version from elsewhere.
-                let gen_helper_dep = format!(
-                    "{}cargo-gen-helpers = \"{}\"\nclap = \"2.27\"",
-                    deps_str, crate_version
-                );
-                contents = contents.replace(deps_str, &gen_helper_dep);
+            // Add the cargo-gen-helpers dependency.
+            let deps_str = "[dependencies]\n";
+            let crate_version = env!("CARGO_PKG_VERSION");
+            // FIXME: pick clap version from elsewhere automatically.
+            let clap_version = "2.31";
+            let gen_helper_dep = format!(
+                "{}cargo-gen-helpers = \"{}\"\n\
+                 clap = {{ version = \"{}\", features = [\"yaml\"] }}\n",
+                deps_str, crate_version, clap_version
+            );
+            contents = contents.replace(deps_str, &gen_helper_dep);
 
-                // FIXME: use the actual crate name.
-                contents.push_str(
-                    "\n[package.metadata.cargo_generators.\"cargo_gen_test.app\"]\n\
-                     single_line_description = \"An app generator.\"\n\
-                     command = \"cargo_gen_test::cargo_generators::app::AppGenerator\"\
-                     \n",
-                );
-                Ok(Some(contents))
-            },
-        )
+            Ok(Some(contents))
+        })
     }
 }
 

@@ -70,6 +70,24 @@ fn it_publicly_exposes_the_cargo_generator_module() {
 }
 
 #[test]
+fn it_imports_clap_with_macros() {
+    let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
+    run_with_args(args(&[
+        "app",
+        "--crate-root",
+        crate_dir.path().to_str().unwrap(),
+    ]));
+    let content = read_file_to_string(crate_dir.path().join("src/lib.rs")).unwrap();
+    assert!(
+        content.contains("#[macro_use]\nextern crate clap;"),
+        format!(
+            "{} expected to contain \"#[macro_use]\nextern crate clap;\"",
+            content
+        )
+    );
+}
+
+#[test]
 fn it_creates_some_tests_for_the_generator() {
     let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
     run_with_args(args(&[
@@ -116,7 +134,7 @@ fn generated_code_passes_the_generated_tests() {
         );
         Ok(Some(replaced))
     }).unwrap();
-    run_generated_tests(crate_dir.path().to_path_buf()).unwrap();
+    run_generated_tests(&crate_dir.path().to_path_buf()).unwrap();
 }
 
 #[test]
@@ -146,7 +164,7 @@ fn it_adds_cargo_gen_helpers_as_a_dependency() {
 }
 
 #[test]
-fn it_adds_clap_as_a_dependency() {
+fn it_adds_clap_with_yaml_as_a_dependency() {
     let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
     let cargo_toml = read_toml(&crate_dir);
     assert!(
@@ -163,27 +181,20 @@ fn it_adds_clap_as_a_dependency() {
         cargo_toml.contains("clap = "),
         format!("{} should contain the clap dependency", cargo_toml)
     );
+    assert!(
+        cargo_toml.contains("features = [\"yaml\"]"),
+        format!("{} should enable the YAML parser", cargo_toml)
+    );
 }
 
 #[test]
-fn it_adds_the_cargo_generator_entry_into_cargo_toml_package_metadata() {
+fn it_creates_a_cargo_generators_yaml_file() {
     let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
-    let expected_content = "[package.metadata.cargo_generators.\"cargo_gen_test.app\"]\n\
-                            single_line_description = \"An app generator.\"\n\
-                            command = \"cargo_gen_test::cargo_generators::app::AppGenerator\"";
-    let cargo_toml = read_toml(&crate_dir);
-    assert!(
-        !cargo_toml.contains(expected_content),
-        format!("{} should not contain {}", cargo_toml, expected_content)
-    );
     run_with_args(args(&[
         "app",
         "--crate-root",
         crate_dir.path().to_str().unwrap(),
     ]));
-    let cargo_toml = read_toml(&crate_dir);
-    assert!(
-        cargo_toml.contains(expected_content),
-        format!("{} should contain {}", cargo_toml, expected_content)
-    );
+    let content = read_file_to_string(crate_dir.path().join("cargo_generators.yml")).unwrap();
+    assert!(content.contains("name: gen-test.app"));
 }

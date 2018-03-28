@@ -57,5 +57,5 @@ fn it_creates_an_integration_test() {
 fn generated_code_passes_the_generated_tests() {
     let crate_dir = create_empty_crate("gen-test").unwrap();
     run_with_args(args(&["--crate-root", crate_dir.path().to_str().unwrap()]));
-    run_generated_tests(crate_dir.path().to_path_buf()).unwrap();
+    run_generated_tests(&crate_dir.path().to_path_buf()).unwrap();
 }

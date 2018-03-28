@@ -1,9 +1,8 @@
 extern crate cargo_gen_helpers;
-extern crate clap;
 
 use self::cargo_gen_helpers::errors::Result as CGHResult;
 use self::cargo_gen_helpers::{create_file, modify_file, CargoGenerator};
-use self::clap::{App, Arg, SubCommand};
+use clap::{App, SubCommand};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
@@ -17,20 +16,9 @@ where
     T: Into<OsString> + Clone,
 {
     fn from(clargs: I) -> AppGenerator {
+        let yml = load_yaml!("../../cargo_generators.yml");
         let args = App::new("")
-            .subcommand(
-                SubCommand::with_name("gen").subcommand(
-                    SubCommand::with_name("gen-test.app")
-                        .about("Generate an app")
-                        .arg(
-                            Arg::with_name("crate-root")
-                                .help("The root folder of the crate")
-                                .long("crate-root")
-                                .value_name("FOLDER")
-                                .default_value("."),
-                        ),
-                ),
-            )
+            .subcommand(SubCommand::with_name("gen").subcommand(SubCommand::from_yaml(&yml[0])))
             .get_matches_from(clargs);
         let gen_args = args.subcommand_matches("gen")
             .expect("'gen' subcommand expected but not provided");

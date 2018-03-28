@@ -6,6 +6,11 @@ use cargo_gen_helpers::gen::CargoGeneratorGenerator;
 use cargo_gen_helpers::test_helpers::{create_empty_crate, read_file_to_string, run_generated_tests};
 use cargo_gen_helpers::{modify_file, CargoGenerator};
 use std::vec::IntoIter;
+use tempdir::TempDir;
+
+fn read_toml(crate_dir: &TempDir) -> String {
+    read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap()
+}
 
 fn args<'a>(suffix: &'a [&str]) -> IntoIter<&'a str> {
     let mut a = vec!["cargo", "gen", "cargo_generator.generator"];
@@ -117,7 +122,7 @@ fn generated_code_passes_the_generated_tests() {
 #[test]
 fn it_adds_cargo_gen_helpers_as_a_dependency() {
     let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
-    let cargo_toml = read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap();
+    let cargo_toml = read_toml(&crate_dir);
     assert!(
         !cargo_toml.contains("cargo-gen-helpers = "),
         format!(
@@ -130,7 +135,7 @@ fn it_adds_cargo_gen_helpers_as_a_dependency() {
         "--crate-root",
         crate_dir.path().to_str().unwrap(),
     ]));
-    let cargo_toml = read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap();
+    let cargo_toml = read_toml(&crate_dir);
     assert!(
         cargo_toml.contains("cargo-gen-helpers = "),
         format!(
@@ -143,7 +148,7 @@ fn it_adds_cargo_gen_helpers_as_a_dependency() {
 #[test]
 fn it_adds_clap_as_a_dependency() {
     let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
-    let cargo_toml = read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap();
+    let cargo_toml = read_toml(&crate_dir);
     assert!(
         !cargo_toml.contains("clap = "),
         format!("{} should not contain the clap dependency", cargo_toml)
@@ -153,7 +158,7 @@ fn it_adds_clap_as_a_dependency() {
         "--crate-root",
         crate_dir.path().to_str().unwrap(),
     ]));
-    let cargo_toml = read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap();
+    let cargo_toml = read_toml(&crate_dir);
     assert!(
         cargo_toml.contains("clap = "),
         format!("{} should contain the clap dependency", cargo_toml)
@@ -166,7 +171,7 @@ fn it_adds_the_cargo_generator_entry_into_cargo_toml_package_metadata() {
     let expected_content = "[package.metadata.cargo_generators.\"cargo_gen_test.app\"]\n\
                             single_line_description = \"An app generator.\"\n\
                             command = \"cargo_gen_test::cargo_generators::app::AppGenerator\"";
-    let cargo_toml = read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap();
+    let cargo_toml = read_toml(&crate_dir);
     assert!(
         !cargo_toml.contains(expected_content),
         format!("{} should not contain {}", cargo_toml, expected_content)
@@ -176,7 +181,7 @@ fn it_adds_the_cargo_generator_entry_into_cargo_toml_package_metadata() {
         "--crate-root",
         crate_dir.path().to_str().unwrap(),
     ]));
-    let cargo_toml = read_file_to_string(crate_dir.path().join("Cargo.toml")).unwrap();
+    let cargo_toml = read_toml(&crate_dir);
     assert!(
         cargo_toml.contains(expected_content),
         format!("{} should contain {}", cargo_toml, expected_content)

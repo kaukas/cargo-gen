@@ -9,6 +9,9 @@ license = "MIT"
 cargo-gen-helpers = { path = "members/cargo-gen-helpers" }
 clap = "2.31"
 yaml-rust = "0.4"
+failure = "0.1.1"
+failure_derive = "0.1.1"
+cargo_metadata = "0.5.4"
 
 [dev-dependencies]
 assert_cli = "0.5"

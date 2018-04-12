@@ -13,7 +13,7 @@ fn read_toml(crate_dir: &TempDir) -> String {
 }
 
 fn args<'a>(suffix: &'a [&str]) -> IntoIter<&'a str> {
-    let mut a = vec!["cargo", "gen", "cargo_generator.generator"];
+    let mut a = vec!["cargo", "gen", "cargo-gen.generator"];
     a.extend(suffix.iter());
     a.into_iter()
 }
@@ -195,6 +195,6 @@ fn it_creates_a_cargo_generators_yaml_file() {
         "--crate-root",
         crate_dir.path().to_str().unwrap(),
     ]));
-    let content = read_file_to_string(crate_dir.path().join("cargo_generators.yml")).unwrap();
+    let content = read_file_to_string(crate_dir.path().join("cargo_generators.yaml")).unwrap();
     assert!(content.contains("name: gen-test.app"));
 }

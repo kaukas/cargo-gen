@@ -15,7 +15,7 @@ struct GenFileTemplate {}
 struct TestFileTemplate {}
 
 #[derive(Template)]
-#[template(path = "cargo_generators.yml")]
+#[template(path = "cargo_generators.yaml")]
 struct ClapYamlFileTemplate {}
 
 pub struct CargoGeneratorGenerator {
@@ -29,15 +29,15 @@ where
     T: Into<OsString> + Clone,
 {
     fn from(clargs: I) -> CargoGeneratorGenerator {
-        let yml = load_yaml!("../cargo_generators.yml");
+        let yml = load_yaml!("../cargo_generators.yaml");
         let args = App::new("")
             .subcommand(SubCommand::with_name("gen").subcommand(SubCommand::from_yaml(&yml[0])))
             .get_matches_from(clargs);
         let gen_args = args.subcommand_matches("gen")
             .expect("'gen' subcommand expected but not provided");
         let cgargs = gen_args
-            .subcommand_matches("cargo_generator.generator")
-            .expect("'cargo_generator.generator' subcommand expected but not provided");
+            .subcommand_matches("cargo-gen.generator")
+            .expect("'cargo-gen.generator' subcommand expected but not provided");
         CargoGeneratorGenerator {
             short_name: cgargs.value_of("GENERATOR_NAME").unwrap().to_owned(),
             root: Path::new(cgargs.value_of("crate-root").unwrap()).to_path_buf(),
@@ -88,7 +88,7 @@ impl CargoGenerator for CargoGeneratorGenerator {
         // Create a clap command line specifications YAML file
         // TODO: modify existing
         let clap_file_content = ClapYamlFileTemplate {}.render()?;
-        let path = self.root.join("cargo_generators.yml");
+        let path = self.root.join("cargo_generators.yaml");
         create_file(path, &clap_file_content)?;
 
         // Cargo.toml
@@ -121,7 +121,7 @@ mod arg_parsing {
     use std::vec::IntoIter;
 
     fn args<'a>(suffix: &'a [&str]) -> IntoIter<&'a str> {
-        let mut a = vec!["cargo", "gen", "cargo_generator.generator"];
+        let mut a = vec!["cargo", "gen", "cargo-gen.generator"];
         a.extend(suffix.iter());
         a.into_iter()
     }

@@ -39,11 +39,10 @@ fn it_fails_when_both_list_and_subcommand_provided() {
 }
 
 #[test]
-#[ignore]
 fn it_returns_a_list_of_available_generators() {
     Assert::cargo_binary("cargo-gen")
         .with_args(&["gen", "--list"])
         .stdout()
-        .contains("cargo-gen.generator")
+        .is("cargo-gen.generator\n")
         .unwrap();
 }

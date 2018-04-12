@@ -11,7 +11,7 @@ use failure::{err_msg, Error, SyncFailure};
 
 #[derive(Debug)]
 pub struct Generator {
-    name: String,
+    pub name: String,
     factory: String,
 }
 
@@ -20,29 +20,20 @@ impl Generator {
     fn try_from_yaml(yaml_doc: &Yaml) -> Result<Generator, Error> {
         let gen_hash = yaml_doc
             .as_hash()
-            .ok_or(err_msg("A generator config is not a hash"))?;
+            .ok_or_else(|| err_msg("A generator config is not a hash"))?;
         let name = gen_hash
             .get(&Yaml::from_str("name"))
-            .ok_or(err_msg("A generator name is not present"))?
+            .ok_or_else(|| err_msg("A generator name is not present"))?
             .as_str()
-            .ok_or(err_msg("A generator name is not a string"))?
+            .ok_or_else(|| err_msg("A generator name is not a string"))?
             .to_owned();
         let factory = gen_hash
             .get(&Yaml::from_str("factory"))
-            .ok_or(format_err!(
-                "A generator {} does not have a factory defined",
-                name
-            ))?
+            .ok_or_else(|| format_err!("A generator {} does not have a factory defined", name))?
             .as_str()
-            .ok_or(format_err!(
-                "A factory of generator {} is not a string",
-                name
-            ))?
+            .ok_or_else(|| format_err!("A factory of generator {} is not a string", name))?
             .to_owned();
-        Ok(Generator {
-            name: name,
-            factory: factory,
-        })
+        Ok(Generator { name, factory })
     }
 }
 
@@ -55,7 +46,7 @@ where
         Err(e) => vec![Err(e)],
         Ok(dep_root_dirs) => {
             // Find all cargo_generators.yaml's in all roots.
-            let cg_yamls = find_yaml_files_in_dirs(dep_root_dirs);
+            let cg_yamls = find_yaml_files_in_dirs(&dep_root_dirs);
             // Parse each yaml
             let parsed_yamls = parse_yamls(cg_yamls);
             // Parse generators
@@ -79,7 +70,7 @@ where
         .collect())
 }
 
-fn find_yaml_files_in_dirs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+fn find_yaml_files_in_dirs(paths: &[PathBuf]) -> Vec<PathBuf> {
     paths
         .iter()
         .map(|p| p.join("cargo_generators.yaml"))
@@ -166,8 +157,11 @@ mod from_yaml_test {
 
 #[cfg(test)]
 mod find_all_test {
+    extern crate cargo;
     extern crate cargo_gen_helpers;
 
+    use self::cargo::ops;
+    use self::cargo::util::Config as CargoConfig;
     use self::cargo_gen_helpers::test_helpers::create_empty_crate;
     use self::cargo_gen_helpers::{create_file, modify_file};
     use super::*;
@@ -177,10 +171,10 @@ mod find_all_test {
         let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
         create_file(
             crate_dir.path().join("cargo_generators.yaml"),
-            "- name: a.x\n  factory: f\n- name: a.y\n  factory: f",
+            "- name: root.gen1\n  factory: f\n- name: root.gen2\n  factory: f",
         ).unwrap();
         assert_eq!(
-            vec!["a.x", "a.y"],
+            vec!["root.gen1", "root.gen2"],
             find_all(crate_dir.path())
                 .into_iter()
                 .map(|res| res.map(|generator| generator.name)
@@ -190,11 +184,11 @@ mod find_all_test {
     }
 
     #[test]
-    fn it_finds_generators_in_the_root_dir_of_a_dependency_and_prints_their_names() {
+    fn it_finds_generators_in_a_dependency_and_prints_their_names() {
         let dep_crate_dir = create_empty_crate("cargo-gen-dep").unwrap();
         create_file(
             dep_crate_dir.path().join("cargo_generators.yaml"),
-            "- name: a.x\n  factory: f\n- name: a.y\n  factory: f",
+            "- name: dep.gen1\n  factory: f\n- name: dep.gen2\n  factory: f",
         ).unwrap();
 
         let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
@@ -209,8 +203,46 @@ mod find_all_test {
         }).unwrap();
 
         assert_eq!(
-            vec!["a.x", "a.y"],
+            vec!["dep.gen1", "dep.gen2"],
             find_all(crate_dir.path())
+                .into_iter()
+                .map(|res| res.map(|generator| generator.name)
+                    .unwrap_or_else(|e| format!("{}", e)))
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn it_finds_generators_in_a_member_package_and_prints_their_names() {
+        let root_crate_dir = create_empty_crate("cargo-gen-test").unwrap();
+        modify_file(root_crate_dir.path().join("Cargo.toml"), |contents| {
+            let deps_str = "[dependencies]\n";
+            let new_deps_str = format!(
+                "{}cargo-gen-member = {{ path = \"cargo-gen-member\" }}\n",
+                deps_str
+            );
+            Ok(Some(contents.replace(deps_str, &new_deps_str)))
+        }).unwrap();
+
+        let member_crate_dir = root_crate_dir.path().join("cargo-gen-member");
+        let config = CargoConfig::default().unwrap();
+        let options = ops::NewOptions::new(
+            None,
+            false,
+            true,
+            member_crate_dir.to_str().unwrap(),
+            Some("cargo-gen-member"),
+        );
+        ops::init(options, &config).unwrap();
+
+        create_file(
+            member_crate_dir.join("cargo_generators.yaml"),
+            "- name: member.gen1\n  factory: f\n- name: member.gen2\n  factory: f",
+        ).unwrap();
+
+        assert_eq!(
+            vec!["member.gen1", "member.gen2"],
+            find_all(root_crate_dir.path())
                 .into_iter()
                 .map(|res| res.map(|generator| generator.name)
                     .unwrap_or_else(|e| format!("{}", e)))
@@ -223,10 +255,10 @@ mod find_all_test {
         let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
         create_file(
             crate_dir.path().join("cargo_generators.yaml"),
-            "- name: a.x\n- name: a.y\n  factory: f",
+            "- name: root.gen1\n- name: root.gen2\n  factory: f",
         ).unwrap();
         assert_eq!(
-            vec!["ERROR", "a.y"],
+            vec!["ERROR", "root.gen2"],
             find_all(crate_dir.path())
                 .into_iter()
                 .map(|res| res.map(|generator| generator.name)

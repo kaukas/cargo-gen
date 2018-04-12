@@ -16,7 +16,7 @@ where
     T: Into<OsString> + Clone,
 {
     fn from(clargs: I) -> AppGenerator {
-        let yml = load_yaml!("../../cargo_generators.yml");
+        let yml = load_yaml!("../../cargo_generators.yaml");
         let args = App::new("")
             .subcommand(SubCommand::with_name("gen").subcommand(SubCommand::from_yaml(&yml[0])))
             .get_matches_from(clargs);

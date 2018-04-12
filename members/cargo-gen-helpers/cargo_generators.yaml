@@ -1,4 +1,4 @@
-- name: cargo_generator.generator
+- name: cargo-gen.generator
   factory: "cargo_gen_helpers::gen"
   version: "0.1"
   about: Generate a scaffold of an empty but functional generator

@@ -11,8 +11,8 @@ fn main() {
         // FIXME: panics
         for result in find_all(current_dir().unwrap()) {
             match result {
-                Ok(generator) => println!("{:?}", generator),
-                Err(err) => println!("Error: {}", err),
+                Ok(generator) => println!("{}", generator.name),
+                Err(err) => eprintln!("{}", err),
             }
         }
     }

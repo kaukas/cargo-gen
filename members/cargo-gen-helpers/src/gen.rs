@@ -1,7 +1,7 @@
 use askama::Template;
 use errors::*;
 use gen_trait::CargoGenerator;
-use helpers::{create_file, modify_file};
+use helpers::FileHelper;
 use clap::{App, SubCommand};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -47,9 +47,10 @@ where
 
 impl CargoGenerator for CargoGeneratorGenerator {
     fn gen(&self) -> Result<()> {
+        let file_helper = FileHelper::new(false);
         // cargo generators module
         // TODO: modify existing
-        create_file(
+        file_helper.create_file(
             self.root.join("src/cargo_generators/mod.rs"),
             "pub mod app;",
         )?;
@@ -58,10 +59,10 @@ impl CargoGenerator for CargoGeneratorGenerator {
         let gen_file_content = GenFileTemplate {}.render()?;
         let path = self.root
             .join(format!("src/cargo_generators/{}.rs", self.short_name));
-        create_file(path, &gen_file_content)?;
+        file_helper.create_file(path, &gen_file_content)?;
 
         // expose cargo generators in lib.rs
-        modify_file(self.root.join("src/lib.rs"), |mut contents| {
+        file_helper.modify_file(self.root.join("src/lib.rs"), |mut contents| {
             contents.insert_str(
                 0,
                 "#[macro_use]\nextern crate clap;\n\npub mod cargo_generators;\n",
@@ -70,30 +71,30 @@ impl CargoGenerator for CargoGeneratorGenerator {
         })?;
 
         // cargo generators test loader module
-        create_file(
+        file_helper.create_file(
             self.root.join("tests/cargo_gen.rs"),
             "mod cargo_generators;",
         )?;
 
         // cargo gen test module
         // TODO: modify existing
-        create_file(self.root.join("tests/cargo_generators/mod.rs"), "mod app;")?;
+        file_helper.create_file(self.root.join("tests/cargo_generators/mod.rs"), "mod app;")?;
 
         // cargo gen test
         let test_file_content = TestFileTemplate {}.render()?;
         let path = self.root
             .join(format!("tests/cargo_generators/{}.rs", self.short_name));
-        create_file(path, &test_file_content)?;
+        file_helper.create_file(path, &test_file_content)?;
 
         // Create a clap command line specifications YAML file
         // TODO: modify existing
         let clap_file_content = ClapYamlFileTemplate {}.render()?;
         let path = self.root.join("cargo_generators.yaml");
-        create_file(path, &clap_file_content)?;
+        file_helper.create_file(path, &clap_file_content)?;
 
         // Cargo.toml
         // TODO: move to helper
-        modify_file(self.root.join("Cargo.toml"), |mut contents| {
+        file_helper.modify_file(self.root.join("Cargo.toml"), |mut contents| {
             // TODO: use a TOML parser that preserves order, whitespace, etc. At the moment the
             // toml crate does not.
 

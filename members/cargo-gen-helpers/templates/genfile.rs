@@ -1,7 +1,7 @@
 extern crate cargo_gen_helpers;
 
 use self::cargo_gen_helpers::errors::Result as CGHResult;
-use self::cargo_gen_helpers::{create_file, modify_file, CargoGenerator};
+use self::cargo_gen_helpers::{CargoGenerator, FileHelper};
 use clap::{App, SubCommand};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -34,7 +34,8 @@ where
 
 impl CargoGenerator for AppGenerator {
     fn gen(&self) -> CGHResult<()> {
-        modify_file(self.root.join("src/lib.rs"), |mut contents| {
+        let file_helper = FileHelper::new(false);
+        file_helper.modify_file(self.root.join("src/lib.rs"), |mut contents| {
             contents.insert_str(0, "pub fn add_2(n: isize) -> isize {\n    n + 2\n}\n\n");
             Ok(Some(
                 contents
@@ -43,7 +44,7 @@ impl CargoGenerator for AppGenerator {
             ))
         })?;
         // FIXME: use the actual crate name
-        create_file(
+        file_helper.create_file(
             self.root.join("tests/adds_2.rs"),
             "extern crate gen_test;\n\n\
              #[test]\n\

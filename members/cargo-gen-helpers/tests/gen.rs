@@ -4,7 +4,7 @@ extern crate tempdir;
 
 use cargo_gen_helpers::gen::CargoGeneratorGenerator;
 use cargo_gen_helpers::test_helpers::{create_empty_crate, read_file_to_string, run_generated_tests};
-use cargo_gen_helpers::{modify_file, CargoGenerator};
+use cargo_gen_helpers::{CargoGenerator, FileHelper};
 use std::vec::IntoIter;
 use tempdir::TempDir;
 
@@ -124,16 +124,18 @@ fn generated_code_passes_the_generated_tests() {
         crate_dir.path().to_str().unwrap(),
     ]));
     // Patch the cargo-gen-helpers dependency to point to the current project.
-    modify_file(crate_dir.path().join("Cargo.toml"), |contents| {
-        let replaced = contents.replace(
-            &format!("cargo-gen-helpers = \"{}\"", env!("CARGO_PKG_VERSION")),
-            &format!(
-                "cargo-gen-helpers = {{ path = \"{}\" }}",
-                env!("CARGO_MANIFEST_DIR")
-            ),
-        );
-        Ok(Some(replaced))
-    }).unwrap();
+    FileHelper::new(false)
+        .modify_file(crate_dir.path().join("Cargo.toml"), |contents| {
+            let replaced = contents.replace(
+                &format!("cargo-gen-helpers = \"{}\"", env!("CARGO_PKG_VERSION")),
+                &format!(
+                    "cargo-gen-helpers = {{ path = \"{}\" }}",
+                    env!("CARGO_MANIFEST_DIR")
+                ),
+            );
+            Ok(Some(replaced))
+        })
+        .unwrap();
     run_generated_tests(&crate_dir.path().to_path_buf()).unwrap();
 }
 

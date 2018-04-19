@@ -35,7 +35,7 @@ mod test_create_empty_crate {
 }
 
 mod test_run_generated_tests {
-    use cargo_gen_helpers::create_file;
+    use cargo_gen_helpers::FileHelper;
     use cargo_gen_helpers::test_helpers::{create_empty_crate, run_generated_tests};
 
     // TODO: find a way to test the failing test case.
@@ -52,10 +52,12 @@ mod test_run_generated_tests {
     #[test]
     fn it_runs_the_generated_tests() {
         let crate_dir = create_empty_crate("cargo-gen-test").unwrap();
-        create_file(
-            crate_dir.path().join("tests/foo.rs"),
-            "#[test]\nfn t() { assert!(true); }",
-        ).unwrap();
+        FileHelper::new(false)
+            .create_file(
+                crate_dir.path().join("tests/foo.rs"),
+                "#[test]\nfn t() { assert!(true); }",
+            )
+            .unwrap();
         run_generated_tests(&crate_dir.path().to_path_buf()).unwrap()
     }
 }

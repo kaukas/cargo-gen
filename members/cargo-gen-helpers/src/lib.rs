@@ -26,4 +26,4 @@ pub mod gen;
 pub mod test_helpers;
 
 pub use gen_trait::CargoGenerator;
-pub use helpers::{create_file, modify_file};
+pub use helpers::FileHelper;

@@ -2,7 +2,7 @@ use cargo::core::Workspace;
 use cargo::ops;
 use cargo::util::Config as CargoConfig;
 use errors::*;
-use helpers::create_file;
+use helpers::FileHelper;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -51,7 +51,7 @@ pub fn run_generated_tests(path: &PathBuf) -> Result<()> {
     // dependencies from the current project as possible. To achieve that we use the Cargo.lock
     // from the current project. It is a hack since the lockfile does not apply but Cargo seems to
     // be able to pick up the applicable pieces from it.
-    create_file(
+    FileHelper::new(false).create_file(
         path.join("Cargo.lock"),
         &read_file_to_string(find_lockfile()?)?,
     )?;

@@ -3,6 +3,9 @@ name = "cargo-gen-helpers"
 version = "0.0.1"
 authors = ["Linas Juškevičius <linas@prodigito.lt>"]
 
+[lib]
+doctest = false
+
 [dependencies]
 askama = "0.5"
 error-chain = "0.11"

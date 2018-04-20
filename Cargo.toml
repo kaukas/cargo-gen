@@ -5,6 +5,9 @@ description = "A cargo generator subcommand"
 authors = ["Linas Juškevičius <linas@prodigito.lt>"]
 license = "MIT"
 
+[lib]
+doctest = false
+
 [dependencies]
 cargo-gen-helpers = { path = "members/cargo-gen-helpers" }
 clap = "2.31"

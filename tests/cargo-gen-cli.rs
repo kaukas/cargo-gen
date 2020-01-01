@@ -2,7 +2,7 @@ extern crate assert_cli;
 extern crate cargo_gen_helpers;
 
 use assert_cli::Assert;
-// use cargo_gen_helpers::test_helpers::create_empty_crate;
+use cargo_gen_helpers::test_helpers::create_empty_crate;
 
 #[test]
 fn it_prints_the_help_text_when_called_without_arguments() {
@@ -45,4 +45,22 @@ fn it_returns_a_list_of_available_generators() {
         .stdout()
         .is("cargo-gen.generator\n")
         .unwrap();
+}
+
+#[test]
+fn it_runs_the_specified_generator() {
+    let crate_dir = create_empty_crate("gen-test").unwrap();
+    Assert::cargo_binary("cargo-gen")
+        .with_args(&[
+            "gen",
+            "--crate-dir",
+            crate_dir.path().to_str().unwrap(),
+            "cargo-gen.generator",
+        ])
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("woinerog")
+        .unwrap();
+    assert!(crate_dir.path().join("cargo_generators.yaml").exists());
 }

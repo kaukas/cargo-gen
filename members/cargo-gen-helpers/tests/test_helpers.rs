@@ -34,6 +34,48 @@ mod test_create_empty_crate {
     }
 }
 
+mod test_create_custom_empty_crate {
+    extern crate tempdir;
+
+    use self::tempdir::TempDir;
+    use cargo_gen_helpers::test_helpers::{create_custom_empty_crate, read_file_to_string};
+
+    #[test]
+    fn it_generates_a_new_crate_in_the_given_folder() {
+        let name = "cargo-gen-test";
+        let tempdir = TempDir::new(name).unwrap();
+        create_custom_empty_crate(name, tempdir.path(), false, true).unwrap();
+        let cargo_toml = read_file_to_string(tempdir.path().join("Cargo.toml")).unwrap();
+        assert!(
+            cargo_toml.contains("name = \"cargo-gen-test\""),
+            format!(
+                "{} should contain metadata for the cargo-gen-test crate",
+                cargo_toml
+            )
+        );
+    }
+
+    #[test]
+    fn it_generates_a_new_lib_crate() {
+        let name = "cargo-gen-test";
+        let tempdir = TempDir::new(name).unwrap();
+        create_custom_empty_crate(name, tempdir.path(), false, true).unwrap();
+        read_file_to_string(tempdir.path().join("Cargo.toml")).unwrap();
+        assert!(tempdir.path().join("src/lib.rs").exists());
+        assert!(!tempdir.path().join("src/main.rs").exists());
+    }
+
+    #[test]
+    fn it_generates_a_new_bin_crate() {
+        let name = "cargo-gen-test";
+        let tempdir = TempDir::new(name).unwrap();
+        create_custom_empty_crate(name, tempdir.path(), true, false).unwrap();
+        read_file_to_string(tempdir.path().join("Cargo.toml")).unwrap();
+        assert!(!tempdir.path().join("src/lib.rs").exists());
+        assert!(tempdir.path().join("src/main.rs").exists());
+    }
+}
+
 mod test_run_generated_tests {
     use cargo_gen_helpers::FileHelper;
     use cargo_gen_helpers::test_helpers::{create_empty_crate, run_generated_tests};

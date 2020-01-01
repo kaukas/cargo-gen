@@ -3,6 +3,7 @@ use cargo::ops;
 use cargo::util::Config as CargoConfig;
 use errors::*;
 use helpers::FileHelper;
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -16,16 +17,22 @@ pub fn read_file_to_string(path: PathBuf) -> Result<String> {
 
 pub fn create_empty_crate(name: &str) -> Result<TempDir> {
     let tempdir = TempDir::new(name)?;
-    {
-        let config = CargoConfig::default();
-        let options = if let Some(root) = tempdir.path().to_str() {
-            ops::NewOptions::new(None, false, true, root, Some(name))
-        } else {
-            bail!("Failed to construct the tempdir path string")
-        };
-        ops::init(options, &config?)?;
-    }
+    create_custom_empty_crate(name, tempdir.path(), false, true)?;
     Ok(tempdir)
+}
+
+pub fn create_custom_empty_crate<P>(name: &str, root_dir: P, bin: bool, lib: bool) -> Result<()>
+where
+    P: AsRef<Path> + AsRef<OsStr>,
+{
+    let config = CargoConfig::default();
+    let options = if let Some(root) = Path::new(&root_dir).to_str() {
+        ops::NewOptions::new(None, bin, lib, root, Some(name))
+    } else {
+        bail!("Failed to construct the root directory path string")
+    };
+    ops::init(options, &config?)?;
+    Ok(())
 }
 
 fn find_lockfile() -> Result<PathBuf> {

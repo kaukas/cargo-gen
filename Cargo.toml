@@ -9,15 +9,20 @@ license = "MIT"
 doctest = false
 
 [dependencies]
+askama = "0.5"
+cargo = "0.22"
 cargo-gen-helpers = { path = "members/cargo-gen-helpers" }
+cargo_metadata = "0.5.4"
 clap = "2.31"
-yaml-rust = "0.4"
 failure = "0.1.1"
 failure_derive = "0.1.1"
-cargo_metadata = "0.5.4"
+tempdir = "0.3"
+yaml-rust = "0.4"
 
 [dev-dependencies]
 assert_cli = "0.5"
-cargo = "0.22"
+
+[build-dependencies]
+askama = "0.5"
 
 [workspace]

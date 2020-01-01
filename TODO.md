@@ -1,0 +1,7 @@
+- Wire up the whole thing:
+  - Discovery
+  - Run entry point
+- Logging, with colors
+- `--dry-run`
+- Packaging and publishing
+- Generator in-place modifications instead of overwrites

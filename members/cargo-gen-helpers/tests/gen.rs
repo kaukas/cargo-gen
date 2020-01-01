@@ -2,7 +2,7 @@ extern crate cargo;
 extern crate cargo_gen_helpers;
 extern crate tempdir;
 
-use cargo_gen_helpers::gen::CargoGeneratorGenerator;
+use cargo_gen_helpers::gen::make_cargo_gen_gen;
 use cargo_gen_helpers::test_helpers::{create_empty_crate, read_file_to_string, run_generated_tests};
 use cargo_gen_helpers::{CargoGenerator, FileHelper};
 use std::vec::IntoIter;
@@ -19,7 +19,7 @@ fn args<'a>(suffix: &'a [&str]) -> IntoIter<&'a str> {
 }
 
 fn run_with_args(a: IntoIter<&str>) {
-    CargoGeneratorGenerator::from(a).gen().unwrap();
+    make_cargo_gen_gen(a).gen().unwrap();
 }
 
 #[test]

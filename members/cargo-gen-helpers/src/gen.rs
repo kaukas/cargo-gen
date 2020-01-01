@@ -23,28 +23,6 @@ pub struct CargoGeneratorGenerator {
     short_name: String,
 }
 
-impl<I, T> From<I> for CargoGeneratorGenerator
-where
-    I: IntoIterator<Item = T>,
-    T: Into<OsString> + Clone,
-{
-    fn from(clargs: I) -> CargoGeneratorGenerator {
-        let yml = load_yaml!("../cargo_generators.yaml");
-        let args = App::new("")
-            .subcommand(SubCommand::with_name("gen").subcommand(SubCommand::from_yaml(&yml[0])))
-            .get_matches_from(clargs);
-        let gen_args = args.subcommand_matches("gen")
-            .expect("'gen' subcommand expected but not provided");
-        let cgargs = gen_args
-            .subcommand_matches("cargo-gen.generator")
-            .expect("'cargo-gen.generator' subcommand expected but not provided");
-        CargoGeneratorGenerator {
-            short_name: cgargs.value_of("GENERATOR_NAME").unwrap().to_owned(),
-            root: Path::new(cgargs.value_of("crate-root").unwrap()).to_path_buf(),
-        }
-    }
-}
-
 impl CargoGenerator for CargoGeneratorGenerator {
     fn gen(&self) -> Result<()> {
         let file_helper = FileHelper::new(false);
@@ -115,10 +93,30 @@ impl CargoGenerator for CargoGeneratorGenerator {
     }
 }
 
+pub fn make_cargo_gen_gen<I, T>(clargs: I) -> CargoGeneratorGenerator
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    let yml = load_yaml!("../cargo_generators.yaml");
+    let args = App::new("")
+        .subcommand(SubCommand::with_name("gen").subcommand(SubCommand::from_yaml(&yml[0])))
+        .get_matches_from(clargs);
+    let gen_args = args.subcommand_matches("gen")
+        .expect("'gen' subcommand expected but not provided");
+    let cgargs = gen_args
+        .subcommand_matches("cargo-gen.generator")
+        .expect("'cargo-gen.generator' subcommand expected but not provided");
+    CargoGeneratorGenerator {
+        short_name: cgargs.value_of("GENERATOR_NAME").unwrap().to_owned(),
+        root: Path::new(cgargs.value_of("crate-root").unwrap()).to_path_buf(),
+    }
+}
+
 #[cfg(test)]
 mod arg_parsing {
     use std::path::Path;
-    use super::CargoGeneratorGenerator;
+    use super::make_cargo_gen_gen;
     use std::vec::IntoIter;
 
     fn args<'a>(suffix: &'a [&str]) -> IntoIter<&'a str> {
@@ -129,17 +127,14 @@ mod arg_parsing {
 
     #[test]
     fn it_parses_the_generator_name() {
-        assert_eq!(
-            "app",
-            CargoGeneratorGenerator::from(args(&["app"])).short_name
-        );
+        assert_eq!("app", make_cargo_gen_gen(args(&["app"])).short_name);
     }
 
     #[test]
     fn it_parses_the_crate_root() {
         assert_eq!(
             Path::new("/tmp").to_path_buf(),
-            CargoGeneratorGenerator::from(args(&["app", "--crate-root", "/tmp"])).root
+            make_cargo_gen_gen(args(&["app", "--crate-root", "/tmp"])).root
         );
     }
 
@@ -147,7 +142,7 @@ mod arg_parsing {
     fn the_crate_root_defaults_to_the_current_folder() {
         assert_eq!(
             Path::new(".").to_path_buf(),
-            CargoGeneratorGenerator::from(args(&["app"])).root
+            make_cargo_gen_gen(args(&["app"])).root
         );
     }
 }

@@ -49,8 +49,10 @@ impl FileHelper {
             if self.dry_run {
                 Ok(())
             } else {
+                let content_bytes = modified_content.as_bytes();
+                writable_file.set_len(content_bytes.len() as u64)?;
                 writable_file
-                    .write_all(modified_content.as_bytes())
+                    .write_all(content_bytes)
                     .chain_err(|| format!("Writing to {} failed", path.as_ref().display()))
             }
         } else {

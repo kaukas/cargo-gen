@@ -3,10 +3,10 @@ extern crate tempdir;
 extern crate tempfile;
 
 mod test_create_file {
+    use cargo_gen_helpers::FileHelper;
     use std::fs::File;
     use std::io::Read;
     use tempdir::TempDir;
-    use cargo_gen_helpers::FileHelper;
 
     #[test]
     fn it_creates_a_file_with_supplied_content() {
@@ -75,9 +75,9 @@ mod test_create_file {
 }
 
 mod test_modify_file {
-    use tempfile::NamedTempFile;
-    use std::io::{Error, Read, Seek, SeekFrom, Write};
     use cargo_gen_helpers::FileHelper;
+    use std::io::{Error, Read, Seek, SeekFrom, Write};
+    use tempfile::NamedTempFile;
 
     fn make_temp_file(content: &[u8]) -> Result<NamedTempFile, Error> {
         let mut tmp_file = NamedTempFile::new()?;
@@ -118,13 +118,27 @@ mod test_modify_file {
         let mut tmp_file = make_temp_file(b"The content.").unwrap();
 
         FileHelper::new(false)
-            .modify_file(tmp_file.path(), |_| Ok(Some("New content.".to_string())))
+            .modify_file(tmp_file.path(), |_| Ok(Some("New.".to_string())))
             .unwrap();
 
         tmp_file.seek(SeekFrom::Start(0)).unwrap();
         let mut new_content = String::new();
         tmp_file.read_to_string(&mut new_content).unwrap();
-        assert_eq!("New content.", new_content);
+        assert_eq!("New.", new_content);
+    }
+
+    #[test]
+    fn it_handles_multibyte_characters_well() {
+        let mut tmp_file = make_temp_file(b"Some long content to be truncated").unwrap();
+
+        FileHelper::new(false)
+            .modify_file(tmp_file.path(), |_| Ok(Some("Iñtërn".to_string())))
+            .unwrap();
+
+        tmp_file.seek(SeekFrom::Start(0)).unwrap();
+        let mut new_content = String::new();
+        tmp_file.read_to_string(&mut new_content).unwrap();
+        assert_eq!("Iñtërn", new_content);
     }
 
     #[test]

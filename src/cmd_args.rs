@@ -1,12 +1,13 @@
 extern crate clap;
 
-use std::ffi::OsString;
 use self::clap::{App, AppSettings, Arg, SubCommand};
+use std::ffi::OsString;
 
 #[derive(Debug, PartialEq)]
 pub struct CLArgs {
     pub list: bool,
-    gen_id: Option<String>,
+    pub crate_dir: String,
+    pub gen_id: Option<String>,
     gen_args: Vec<String>,
 }
 
@@ -30,27 +31,34 @@ impl CLArgs {
                             .long("list")
                             .short("l")
                             .conflicts_with("GENERATOR_NAME"),
+                    )
+                    .arg(
+                        Arg::with_name("crate-dir")
+                            .help("The root directory of the crate to run the generator on")
+                            .long("crate-dir")
+                            .short("d")
+                            .takes_value(true),
                     ),
             )
             .get_matches_from(args);
         let gen_args = args.subcommand_matches("gen").unwrap();
-        match gen_args.subcommand() {
+        let is_list = gen_args.is_present("list");
+        let crate_dir = gen_args.value_of("crate-dir").unwrap_or(".").to_string();
+        let (gen_id, subcmd_args) = match gen_args.subcommand() {
             (subcmd, Some(subcmd_args)) => {
                 let subcmd_args = match subcmd_args.values_of("") {
                     Some(subcmd_args) => subcmd_args.map(|s| s.to_owned()).collect(),
                     None => vec![],
                 };
-                CLArgs {
-                    list: false,
-                    gen_id: Some(subcmd.to_owned()),
-                    gen_args: subcmd_args,
-                }
+                (Some(subcmd.to_owned()), subcmd_args)
             }
-            _ => CLArgs {
-                list: gen_args.is_present("list"),
-                gen_id: None,
-                gen_args: vec![],
-            },
+            _ => (None, vec![]),
+        };
+        CLArgs {
+            list: is_list,
+            crate_dir: crate_dir,
+            gen_id: gen_id,
+            gen_args: subcmd_args,
         }
     }
 }
@@ -74,6 +82,23 @@ mod arg_parsing {
         assert_eq!(false, CLArgs::parse(args(&["app"])).list);
         assert_eq!(true, CLArgs::parse(args(&["-l"])).list);
         assert_eq!(true, CLArgs::parse(args(&["--list"])).list);
+    }
+
+    #[test]
+    fn it_sets_the_crate_dir() {
+        assert_eq!(
+            "/tmp/the-crate",
+            CLArgs::parse(args(&["--crate-dir", "/tmp/the-crate", "app"])).crate_dir
+        );
+        assert_eq!(
+            "/tmp/the-crate",
+            CLArgs::parse(args(&["-d", "/tmp/the-crate", "app"])).crate_dir
+        );
+    }
+
+    #[test]
+    fn it_defaults_the_crate_dir_to_the_current_dir_if_unset() {
+        assert_eq!(".", CLArgs::parse(args(&["app"])).crate_dir);
     }
 
     #[test]
